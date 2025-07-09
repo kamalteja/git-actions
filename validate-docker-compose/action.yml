@@ -32,26 +32,28 @@ runs:
 
         IFS=$'\n' read -rd '' -a patterns <<< "${{ inputs.patterns }}"
 
-        echo "Patterns: ${patterns[@]}"
-
         # Read patterns and expand them
         files=()
         for pattern in "${patterns[@]}"; do
-          for file in $pattern; do
+            for file in $pattern; do
             files+=("$file")
-          done
+            done
         done
+        echo Found docker files: "${files[@]}"
 
         if [[ ${#files[@]} -eq 0 ]]; then
-          echo "❌ No compose files found matching the patterns."
-          exit 1
+            echo "❌ No compose files found matching the patterns."
+            exit 1
         fi
 
+        exit_code=0
         for file in "${files[@]}"; do
-          echo "🔍 Validating: $file"
-          if ! docker compose -f "$file" config > /dev/null; then
-            echo "❌ Invalid: $file"
-            exit 1
-          fi
-          echo "✅ Valid: $file"
+            echo "🔍 Validating: $file"
+            if docker compose -f "$file" config > /dev/null; then
+                echo "✅ Valid: $file"
+            else
+                echo "❌ Invalid: $file"
+                exit_code=1
+            fi
         done
+        exit $exit_code
