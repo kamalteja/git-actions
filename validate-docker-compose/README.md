@@ -22,7 +22,6 @@ name: Validate Compose Files
 
 on:
   push:
-  pull_request:
 
 jobs:
   validate:
@@ -33,4 +32,4 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Validate Compose files
-        uses: kamalteja/git-actions/validate-compose@v1
+        uses: kamalteja/git-actions/validate-docker-compose@v1
