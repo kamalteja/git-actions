@@ -2,7 +2,8 @@ name: Validate GitHub Actions Metadata
 
 on:
   push:
-  pull_request:
+    branches:
+      - '*'
 
 jobs:
   validate-action-yml:
