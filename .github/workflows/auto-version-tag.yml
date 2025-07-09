@@ -1,4 +1,4 @@
-name: Auto Tag Monorepo
+name: Auto tag version
 
 on:
   push:
