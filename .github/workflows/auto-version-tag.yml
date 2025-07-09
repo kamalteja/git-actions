@@ -1,0 +1,50 @@
+name: Auto Tag Monorepo
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  tag-release:
+    name: Tag latest commit if untagged
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history & tags
+
+      - name: Check if latest commit is already tagged
+        id: check_tag
+        run: |
+          if git tag --points-at HEAD | grep -q .; then
+            echo "Commit is already tagged."
+            echo "tagged=true" >> $GITHUB_OUTPUT
+          else
+            echo "Commit is not tagged."
+            echo "tagged=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get latest numeric vN tag or default to v1
+        id: get_latest_tag
+        if: steps.check_tag.outputs.tagged == 'false'
+        run: |
+          # Get all tags like v1, v2, v10 (strip 'v' and sort numerically)
+          # Get highest numeric tag, fallback to v1 if none
+          latest_tag=$(git tag | grep -E '^v[0-9]+$' | sed 's/^v//' | sort -n | tail -n 1)
+          if [[ -z "$latest_tag" ]]; then
+            new_tag="v1"
+          else
+            new_tag="v$((latest_tag + 1))"
+          fi
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+
+      - name: Create and push new tag
+        if: steps.check_tag.outputs.tagged == 'false'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag ${{ steps.get_latest_tag.outputs.new_tag }}
+          git push origin ${{ steps.get_latest_tag.outputs.new_tag }}

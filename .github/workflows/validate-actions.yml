@@ -1,0 +1,43 @@
+name: Validate GitHub Actions Metadata
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate-action-yml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install check-jsonschema
+        run: pip install check-jsonschema
+
+      - name: Download GitHub Action schema
+        run: |
+          curl -sSL https://json.schemastore.org/github-action > github-action.schema.json
+
+      - name: Validate all action.yml files
+        run: |
+          find . -name action.yml | while read file; do
+            echo "🔍 Validating action file: $file"
+            if ! check-jsonschema --schemafile github-action.schema.json "$file"; then
+              echo "❌ Invalid: $file"
+              failed=1
+            else
+              echo "✅ Valid: $file"
+            fi
+          done
+
+          if [ "$failed" == "1" ]; then
+            echo "❗ One or more files failed validation."
+            exit 1
+          else
+            echo "🎉 All action.yml files are valid."
+          fi

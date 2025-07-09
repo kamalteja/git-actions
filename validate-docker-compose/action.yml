@@ -1,0 +1,40 @@
+name: Validate Compose Files
+description: Validates docker-compose files using `docker compose config`
+author: Kamal Gurramkonda
+inputs:
+  patterns:
+    description: Glob patterns for compose files to validate
+    required: false
+    default: |
+      **/docker-compose.yml
+      **/docker-compose.*.yml
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install prerequisites
+      shell: bash
+      run: |
+        echo "Ensuring Docker CLI is installed..."
+        docker --version
+        docker compose version
+
+    - name: Validate Compose Files
+      shell: bash
+      run: |
+        echo "Searching for docker-compose files..."
+        mapfile -t files < <(echo "${{ inputs.patterns }}" | xargs -n1 find . -type f -name)
+
+        if [[ ${#files[@]} -eq 0 ]]; then
+          echo "No compose files found matching the patterns."
+          exit 0
+        fi
+
+        for file in "${files[@]}"; do
+          echo "🔍 Validating: $file"
+          if ! docker compose -f "$file" config > /dev/null; then
+            echo "❌ Invalid: $file"
+            exit 1
+          fi
+          echo "✅ Valid: $file"
+        done
