@@ -26,12 +26,17 @@ runs:
     - name: Validate Compose Files
       shell: bash
       run: |
-        echo "Searching for docker-compose files..."
         shopt -s globstar nullglob
+
+        echo "Searching for docker-compose files..."
+
+        IFS=$'\n' read -rd '' -a patterns <<< "${{ inputs.patterns }}"
+
+        echo "Patterns: ${patterns[@]}"
 
         # Read patterns and expand them
         files=()
-        for pattern in ${{ inputs.patterns }}; do
+        for pattern in "${patterns[@]}"; do
           for file in $pattern; do
             files+=("$file")
           done
