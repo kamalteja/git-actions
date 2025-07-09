@@ -26,6 +26,7 @@ runs:
     - name: Validate Compose Files
       shell: bash
       run: |
+        set -x
         shopt -s globstar nullglob
 
         echo "Searching for docker-compose files..."
