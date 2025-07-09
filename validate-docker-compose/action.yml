@@ -8,6 +8,10 @@ inputs:
     default: |
       **/docker-compose.yml
       **/docker-compose.*.yml
+      **/docker-compose-*.yml
+      **/docker-compose.yaml
+      **/docker-compose.*.yaml
+      **/docker-compose-*.yaml
 
 runs:
   using: "composite"
@@ -23,11 +27,19 @@ runs:
       shell: bash
       run: |
         echo "Searching for docker-compose files..."
-        mapfile -t files < <(echo "${{ inputs.patterns }}" | xargs -n1 find . -type f -name)
+        shopt -s globstar nullglob
+
+        # Read patterns and expand them
+        files=()
+        for pattern in ${{ inputs.patterns }}; do
+          for file in $pattern; do
+            files+=("$file")
+          done
+        done
 
         if [[ ${#files[@]} -eq 0 ]]; then
-          echo "No compose files found matching the patterns."
-          exit 0
+          echo "❌ No compose files found matching the patterns."
+          exit 1
         fi
 
         for file in "${files[@]}"; do
