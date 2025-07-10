@@ -19,6 +19,7 @@ runs:
     - name: Validate Compose Files
       shell: bash
       run: |
+        set -xe
         # Decode JSON into bash array
         files=$(echo '${{ inputs.files }}' | jq -r '.[]')
 

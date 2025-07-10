@@ -20,6 +20,7 @@ runs:
     - id: discover
       shell: bash
       run: |
+        set -xe
         shopt -s globstar nullglob
 
         IFS=$'\n' read -r -a patterns <<< "${{ inputs.patterns }}"
@@ -39,6 +40,6 @@ runs:
         fi
 
         # Convert array to JSON
-        json=$(printf '%s\n' "${files[@]}" | jq -R . | jq -s .)
+        json=$(printf '%s\n' "${files[@]}" | jq -R . | jq -sc .)
         echo "Discovered files: $json"
         echo "files=$json" >> $GITHUB_OUTPUT

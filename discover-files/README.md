@@ -42,7 +42,7 @@ To use the `discover-files` action in your workflow, add a step like this:
 ```yaml
 - name: Discover files
   id: discovery
-  uses: kamalteja/github-actions/discover-files@v1
+  uses: kamalteja/git-actions/discover-files@v10
   with:
     patterns: |
       **/docker-compose.yml
