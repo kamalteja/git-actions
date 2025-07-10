@@ -1,0 +1,44 @@
+name: Discover Files
+description: Finds files using glob patterns and outputs a JSON array
+inputs:
+  patterns:
+    description: Multiline list of glob patterns to match
+    required: true
+  fail-on-empty:
+    description: Whether to fail if no files are found
+    required: false
+    default: "true"
+
+outputs:
+  files:
+    description: JSON array of matched file paths
+    value: ${{ steps.discover.outputs.files }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: discover
+      shell: bash
+      run: |
+        shopt -s globstar nullglob
+
+        IFS=$'\n' read -r -a patterns <<< "${{ inputs.patterns }}"
+        files=()
+
+        for pattern in "${patterns[@]}"; do
+          for file in $pattern; do
+            files+=("$file")
+          done
+        done
+
+        if [[ ${#files[@]} -eq 0 ]]; then
+          echo "⚠️ No files matched."
+          if [[ "${{ inputs.fail-on-empty }}" == "true" ]]; then
+            exit 1
+          fi
+        fi
+
+        # Convert array to JSON
+        json=$(printf '%s\n' "${files[@]}" | jq -R . | jq -s .)
+        echo "Discovered files: $json"
+        echo "files=$json" >> $GITHUB_OUTPUT
