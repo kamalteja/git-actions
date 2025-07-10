@@ -36,8 +36,6 @@ runs:
             echo "✅ Build succeeded: $file"
           else
             echo "❌ Build failed: $file"
-            exit_code=1
+            exit 1
           fi
         done
-
-        exit $exit_code
