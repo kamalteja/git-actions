@@ -33,7 +33,7 @@ runs:
         exit_code=0
         echo "$files" | while read -r file; do
           echo "🔍 Validating: $file"
-          if docker compose -f "$file" config > /dev/null; then
+          if docker compose -f "$file" --project-directory "${file%%/*}" config > /dev/null; then
             echo "✅ Valid: $file"
           else
             echo "❌ Invalid: $file"
