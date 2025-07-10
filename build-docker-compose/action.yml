@@ -1,0 +1,43 @@
+name: Build Compose Services
+description: Builds all services from docker-compose files using `docker compose build`
+author: Kamal Gurramkonda
+
+inputs:
+  files:
+    description: JSON array of docker-compose file paths to build
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Verify Docker Setup
+      shell: bash
+      run: |
+        echo "Docker version:"
+        docker --version
+        docker compose version
+
+    - name: Build Compose Services
+      shell: bash
+      run: |
+        set -e
+
+        files=$(echo '${{ inputs.files }}' | jq -r '.[]')
+
+        if [[ -z "$files" ]]; then
+          echo "❌ No Compose files to build."
+          exit 1
+        fi
+
+        exit_code=0
+        echo "$files" | while read -r file; do
+          echo "🚧 Building services from: $file"
+          if docker compose -f "$file" build; then
+            echo "✅ Build succeeded: $file"
+          else
+            echo "❌ Build failed: $file"
+            exit_code=1
+          fi
+        done
+
+        exit $exit_code
