@@ -19,7 +19,7 @@ runs:
     - name: Validate Compose Files
       shell: bash
       run: |
-        set -xe
+        set -e
         # Decode JSON into bash array
         files=$(echo '${{ inputs.files }}' | jq -r '.[]')
 
@@ -28,15 +28,17 @@ runs:
           exit 1
         fi
 
-        echo "Files: ${files[@]}"
+        echo "Files: $files"
+
         exit_code=0
-        for file in "${files[@]}"; do
-            echo "🔍 Validating: $file"
-            if docker compose -f "$file" config > /dev/null; then
-                echo "✅ Valid: $file"
-            else
-                echo "❌ Invalid: $file"
-                exit_code=1
-            fi
+        echo "$files" | while read -r file; do
+          echo "🔍 Validating: $file"
+          if docker compose -f "$file" config > /dev/null; then
+            echo "✅ Valid: $file"
+          else
+            echo "❌ Invalid: $file"
+            exit_code=1
+          fi
         done
+
         exit $exit_code
