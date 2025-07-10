@@ -32,7 +32,7 @@ runs:
         exit_code=0
         echo "$files" | while read -r file; do
           echo "🚧 Building services from: $file"
-          if docker compose -f "$file" build; then
+          if docker compose -f "$file" --project-directory "${file%%/*}" build; then
             echo "✅ Build succeeded: $file"
           else
             echo "❌ Build failed: $file"
