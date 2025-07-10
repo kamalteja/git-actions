@@ -2,21 +2,14 @@ name: Validate Compose Files
 description: Validates docker-compose files using `docker compose config`
 author: Kamal Gurramkonda
 inputs:
-  patterns:
-    description: Glob patterns for compose files to validate
-    required: false
-    default: |
-      **/docker-compose.yml
-      **/docker-compose.*.yml
-      **/docker-compose-*.yml
-      **/docker-compose.yaml
-      **/docker-compose.*.yaml
-      **/docker-compose-*.yaml
+  files:
+    description: JSON array of docker-compose file paths to validate
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Install prerequisites
+    - name: Check Docker CLI
       shell: bash
       run: |
         echo "Ensuring Docker CLI is installed..."
@@ -26,27 +19,15 @@ runs:
     - name: Validate Compose Files
       shell: bash
       run: |
-        set -x
-        shopt -s globstar nullglob
+        # Decode JSON into bash array
+        files=$(echo '${{ inputs.files }}' | jq -r '.[]')
 
-        echo "Searching for docker-compose files..."
-
-        IFS=$'\n' read -r -a patterns <<< "${{ inputs.patterns }}"
-
-        # Read patterns and expand them
-        files=()
-        for pattern in "${patterns[@]}"; do
-            for file in $pattern; do
-            files+=("$file")
-            done
-        done
-        echo Found docker files: "${files[@]}"
-
-        if [[ ${#files[@]} -eq 0 ]]; then
-            echo "❌ No compose files found matching the patterns."
-            exit 1
+        if [[ -z "${files[@]}" ]]; then
+          echo "❌ No docker compose files provided."
+          exit 1
         fi
 
+        echo "Files: ${files[@]}"
         exit_code=0
         for file in "${files[@]}"; do
             echo "🔍 Validating: $file"
